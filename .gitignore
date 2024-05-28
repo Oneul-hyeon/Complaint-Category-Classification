@@ -1,12 +1,11 @@
-*.json
-*.csv
-*.npy
 *.ipynb
-*.pt
 
 data/raw/1.Training/
 data/raw/2.Validation/
+data/df/
+data/encoderclass/
 txt/
+model/
 
 files_for_test_demo/find_DB.py
 find_DB.py

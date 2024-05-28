@@ -1,0 +1,7 @@
+transformers
+tqdm
+pandas
+scikit-learn
+numpy == 1.21
+gradio == 4.29.0
+seaborn

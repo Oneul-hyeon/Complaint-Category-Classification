@@ -4,7 +4,6 @@ warnings.filterwarnings("ignore")
 import torch
 import numpy as np
 from transformers import PreTrainedTokenizerFast
-# from preprocessing import split_dialogue
 from src.GPT2 import convert_dialogue_to_features, GPT2ForSequenceClassification
 
 def model_predict(dialogue) :
@@ -14,8 +13,10 @@ def model_predict(dialogue) :
     out_ = model(input_ids, attention_masks)
     out = out_.detach().cpu().numpy()
     predict = np.argmax(out, axis = 1)[0]
-    return encoderclass[predict]
 
+    return mapping[encoderclass[predict]]
+
+mapping = {"대중교통 안내" : "다산콜센터 : 대중교통 안내", "생활하수도 관련 문의" : "다산콜센터 : 생활하수도 관련 문의", "일반행정 문의" : "다산콜센터 : 일반행정 문의", "코로나19 관련 상담" : "다산콜센터 : 코로나19 관련 상담", "사고 및 보상 문의" : "금융/보험 : 사고 및 보상 문의", "상품 가입 및 해지" : "금융/보험 : 상품 가입 및 해지", "이체, 출금, 대출서비스" : "금융/보험 : 이체, 출금, 대출서비스", "잔고 및 거래내역" : "금융/보험 : 잔고 및 거래내역"}
 '''
 Data Preprocess
 '''

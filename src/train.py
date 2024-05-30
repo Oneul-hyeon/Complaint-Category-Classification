@@ -8,47 +8,18 @@ from pytorchtools import EarlyStopping
 from preprocessing import label_encoding, split_dialogue
 from tqdm import tqdm
 from GPT2 import convert_dialogue_to_features, GPT2Dataset, GPT2ForSequenceClassification
-
+from focal_loss import FocalLoss
 import pandas as pd
 import numpy as np
 
 import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler
-from torch import nn
 from torch.nn import CrossEntropyLoss
 import torch.optim as optim
-
-import torch.nn.functional as F
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-'''
-gamma_neg, gamma_pos : 음수와 양수 예측에 대한 가중치 조정 파라미터
-clip : 음수 손실을 클리핑하여 너무 작은 값이 되지 않도록 방지
-reduction : 손실 값을 어떻게 축약할지 결정
-'''
-
-class FocalLoss(nn.Module):
-    def __init__(self, alpha=1, gamma=2, reduction='mean'):
-        super(FocalLoss, self).__init__()
-        self.alpha = alpha
-        self.gamma = gamma
-        self.reduction = reduction
-
-    def forward(self, inputs, targets):
-        # Cross Entropy Loss
-        BCE_loss = F.cross_entropy(inputs, targets, reduction='none')
-        pt = torch.exp(-BCE_loss)
-        F_loss = self.alpha * (1 - pt) ** self.gamma * BCE_loss
-
-        if self.reduction == 'mean':
-            return F_loss.mean()
-        elif self.reduction == 'sum':
-            return F_loss.sum()
-        else:
-            return F_loss
     
 def calc_accuracy(X, Y) :
     _, max_indices = torch.max(X, 1)
@@ -75,25 +46,17 @@ lr = 5e-5
 train_input_ids, train_attention_masks, train_labels = convert_dialogue_to_features(train_df["split_dialogue"], train_df["label"], MAX_LEN, tokenizer)
 valid_input_ids, valid_attention_masks, valid_labels = convert_dialogue_to_features(valid_df["split_dialogue"], valid_df["label"], MAX_LEN, tokenizer)
 
-class_counts = np.bincount(train_df["label"])
-class_weights = 1. / class_counts
-samples_weights = class_weights[train_df["label"]]
-
-sampler = WeightedRandomSampler(weights=samples_weights, num_samples=len(samples_weights), replacement=True)
-
 train_dataset = GPT2Dataset(train_input_ids, train_attention_masks, train_labels)
 valid_dataset = GPT2Dataset(valid_input_ids, valid_attention_masks, valid_labels)
 
-train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers = 2, sampler = sampler)
+train_dataloader = DataLoader(train_dataset, batch_size = batch_size, num_workers = 2, sampler = True)
 valid_dataloader = DataLoader(valid_dataset, batch_size = batch_size, num_workers = 2, shuffle = False)
 
 model = GPT2ForSequenceClassification().to(device)
 
 early_stopping = EarlyStopping(patience = patience, verbose = True, path = "model/checkpoint.pt")
 
-# loss_fn = CrossEntropyLoss()
 loss_fn = FocalLoss()
-
 optimizer = optim.Adam(model.parameters(), lr = lr)
 
 for e in range(1, epoch+1) :

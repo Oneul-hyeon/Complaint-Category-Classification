@@ -11,7 +11,7 @@ def dialogue_classification(dialogue_) :
 
 markdown_content = """
 다산콜센터 : 대중교통 안내, 생활하수도 관련 문의, 일반행정 문의, 코로나19 관련 상담\n
-금융/보험 : 사고 및 보상 문의, 상품 가입 및 해지, 이체출〮금대〮출서비스, 잔고 및 거래내역
+금융/보험 : 사고 및 보상 문의, 상품 가입 및 해지, 이체/출금/대출서비스, 잔고 및 거래내역
 """
 examples = get_example()
 

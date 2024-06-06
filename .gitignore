@@ -2,8 +2,6 @@
 
 data/raw/1.Training/
 data/raw/2.Validation/
-data/df/
-data/encoderclass/
 txt/
 model/
 
